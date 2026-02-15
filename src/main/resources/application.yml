@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: zip-crypt
+
+zip:
+  output-directory: ./build/out
+  security:
+    admin-username: admin
+    admin-password: admin123
