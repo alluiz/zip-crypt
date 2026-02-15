@@ -5,6 +5,7 @@ import com.example.zipcrypt.domain.TargetOs;
 import com.example.zipcrypt.domain.TargetTool;
 import com.example.zipcrypt.notification.NotificationService;
 import com.example.zipcrypt.service.EncryptionPolicyResolver;
+import com.example.zipcrypt.service.PasswordCacheService;
 import com.example.zipcrypt.service.PasswordGenerator;
 import net.lingala.zip4j.ZipFile;
 import org.junit.jupiter.api.Test;
@@ -28,7 +29,8 @@ class Zip4jArchiveServiceTest {
         PasswordGenerator passwordGenerator = () -> password;
         EncryptionPolicyResolver resolver = (os, tool) -> new EncryptionPolicyResolver.EncryptionPolicy(AES, KEY_STRENGTH_256);
         RecordingNotificationService notificationService = new RecordingNotificationService();
-        Zip4jArchiveService service = new Zip4jArchiveService(passwordGenerator, resolver, notificationService, tempDir.toString());
+        RecordingPasswordCacheService passwordCacheService = new RecordingPasswordCacheService();
+        Zip4jArchiveService service = new Zip4jArchiveService(passwordGenerator, resolver, notificationService, passwordCacheService, tempDir.toString());
 
         var response = service.createEncryptedArchive(new ZipRequest("hello world", "payload.txt", TargetOs.UNIVERSAL, TargetTool.GENERIC));
 
@@ -41,8 +43,11 @@ class Zip4jArchiveServiceTest {
             assertThat(zipFile.getFileHeaders()).hasSize(1);
         }
 
+        assertThat(tempDir.resolve(response.archiveId() + "-payload.txt")).doesNotExist();
         assertThat(notificationService.notifiedArchiveId).isEqualTo(response.archiveId());
         assertThat(notificationService.notifiedPassword).isEqualTo("StrongPassword123!");
+        assertThat(passwordCacheService.fileName).isEqualTo(response.zipFileName());
+        assertThat(passwordCacheService.password).isEqualTo("StrongPassword123!");
     }
 
     private static class RecordingNotificationService implements NotificationService {
@@ -53,6 +58,22 @@ class Zip4jArchiveServiceTest {
         public void notifyPassword(String archiveId, char[] password) {
             this.notifiedArchiveId = archiveId;
             this.notifiedPassword = new String(password);
+        }
+    }
+
+    private static class RecordingPasswordCacheService implements PasswordCacheService {
+        private String fileName;
+        private String password;
+
+        @Override
+        public void put(String fileName, char[] password) {
+            this.fileName = fileName;
+            this.password = new String(password);
+        }
+
+        @Override
+        public java.util.Optional<String> get(String fileName) {
+            return java.util.Optional.empty();
         }
     }
 }

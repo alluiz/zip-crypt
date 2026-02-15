@@ -20,6 +20,12 @@ public class ApiExceptionHandler {
         return detail;
     }
 
+    @ExceptionHandler(PasswordNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ProblemDetail handleNotFound(PasswordNotFoundException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
     @ExceptionHandler(IllegalStateException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ProblemDetail handleInternal(IllegalStateException ex) {

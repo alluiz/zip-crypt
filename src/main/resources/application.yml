@@ -4,3 +4,6 @@ spring:
 
 zip:
   output-directory: ./build/out
+  security:
+    admin-username: admin
+    admin-password: admin123
