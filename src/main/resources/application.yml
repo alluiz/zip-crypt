@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: zip-crypt
+
+zip:
+  output-directory: ./build/out
